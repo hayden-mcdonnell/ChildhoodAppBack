@@ -1,0 +1,17 @@
+{
+  "name": "childhoodapi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "body-parser": "*",
+    "express": "*",
+    "mongoose": "*",
+    "nodemon": "^1.18.3"
+  },
+  "author": "Hayden McDonnell",
+  "license": "ISC"
+}
