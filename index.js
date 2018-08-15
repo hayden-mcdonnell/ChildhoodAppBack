@@ -50,7 +50,6 @@ app.post('/api/users', function(req, res){
                 confirmation = {Confirmation : "Failed", Data: error};
             }
             res.send(confirmation);
-            return res;
        } 
     )}
 });
