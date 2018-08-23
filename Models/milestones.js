@@ -56,9 +56,9 @@ module.exports = {
     )},
 
   //updates milestone progress in database
-  completeMilestones: function(id){
-    Milestones.findById(id, function (err, data) {
-      data.endDate = '1-1-2018';
+  completeMilestones: function(body, eDate){
+    Milestones.findById(body.id, function (err, data) {
+      data.endDate = eDate;
       data.save();
     }
     )},

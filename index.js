@@ -65,8 +65,18 @@ app.post('/api/add', function(req, res){
 });
 
 app.post('/api/complete', function(req, res){
-   Milestone.completeMilestones(req.body.id);
+   
+   Milestone.completeMilestones(req.body, req.body[5]);
 });
+
+app.post('/api/changepw', function(req, res){
+   User.changePw(req.body, function (error){
+       if(error)
+       {
+        res.send(error);
+       }
+   });
+ });
 
 app.listen(3000);
 console.log('Running on port 3000....');
