@@ -62,5 +62,5 @@ var Users = module.exports = mongoose.model('Users', userSchema);
         return callback(err);
       }
     }
-    )}
+    )},
 }
