@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var fs = require('fs');
 
 //Schema
 var userSchema = new mongoose.Schema({
@@ -17,6 +18,10 @@ var userSchema = new mongoose.Schema({
     password: {
       type: String,
       required: true,
+    },
+    img: {
+       data: Buffer, 
+       contentType: String 
     }
   });
 
@@ -63,4 +68,9 @@ var Users = module.exports = mongoose.model('Users', userSchema);
       }
     }
     )},
+
+    uploadUserImage: function(data, callback){
+      console.log("No idea how to do this");
+      console.log("File path: " + data);
+    }
 }

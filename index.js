@@ -78,5 +78,9 @@ app.post('/api/changepw', function(req, res){
    });
  });
 
+ app.post('/api/profilePic', function(req, res){
+    User.uploadUserImage(req.body.uri);
+ });
+
 app.listen(3000);
 console.log('Running on port 3000....');
