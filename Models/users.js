@@ -70,7 +70,7 @@ var Users = module.exports = mongoose.model('Users', userSchema);
     )},
 
     uploadUserImage: function(data, callback){
-      console.log("No idea how to do this");
-      console.log("File path: " + data);
+
+      console.log("File path: " + data.uri);
     }
 }
