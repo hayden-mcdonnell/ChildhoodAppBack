@@ -21,6 +21,11 @@ var milestoneSchema = new mongoose.Schema({
       type: String,
       required: true,
       trim: true
+    },
+    notes:{
+      type: String,
+      required: false,
+      trim: true
     }
   });
 
@@ -63,5 +68,44 @@ module.exports = {
     }
     )},
 
+    //Changes time for milestone
+    changeTime: function(body){
+      Milestones.findById(body.milestone, function (err, data) {
+        if(body.startDate !== '')
+        {
+          data.startDate = body.startDate;
+        }
+        if(body.endDate !== '')
+        {
+          data.endDate = body.endDate;
+        }
+       
+        data.save();
+      }
+      )},
+
+      //Add note
+      addNote: function(body){
+        Milestones.findById(body.id, function (err, data) {
+          console.log(data);
+          data.notes += body.note;
+          data.save();
+        }
+        )},
+        //Edit note
+        editNote: function(body){
+          Milestones.findById(body.id, function (err, data) {
+            console.log(data);
+            data.notes = body.note;
+            data.save();
+          }
+          )},
+
+        //View notes
+        viewNote: function(body, callback){
+          Milestones.findById(body.id, function (err, data) {
+            return callback(null, data.notes)
+          }
+          )},
   }
 

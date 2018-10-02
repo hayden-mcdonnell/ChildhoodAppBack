@@ -6,7 +6,7 @@ var fs = require('fs');
 
 var app = express();
 
-
+var nodemailer = require('nodemailer');
 
 
 app.use(bodyParser.urlencoded({
@@ -65,8 +65,48 @@ app.post('/api/milestones', function(req, res){
     })
 });
 
+app.post('/api/addNote', function(req, res){
+    Milestone.addNote(req.body);
+});
+
+app.post('/api/editNote', function(req, res){
+    Milestone.editNote(req.body);
+});
+
+app.post('/api/viewNote', function(req, res){
+    Milestone.viewNote(req.body, function(error, note){
+        var payload = {
+            note: note
+        }
+        res.send(payload);
+    })
+});
+
 app.post('/api/add', function(req, res){
        Milestone.postMilestones(req.body);
+       
+       var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'childhoodappreadysetgo@gmail.com',
+          pass: 'davidMon1'
+        }
+      });
+
+      var mailOptions = {
+        from: 'childhoodappreadysetgo@gmail.com',
+        to: 'childhoodapptestemail@gmail.com',
+        subject: 'Milestone achieved!!!',
+        text: req.body.email + ' has achieved ' + req.body.milestoneName
+      };
+
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });
 });
 
 app.post('/api/complete', function(req, res){
@@ -81,6 +121,10 @@ app.post('/api/changepw', function(req, res){
         res.send(error);
        }
    });
+ });
+
+ app.post('/api/changeTime', function(req, res){
+    Milestone.changeTime(req.body);
  });
 
  app.post('/api/profilePic', function(req, res){
@@ -105,7 +149,6 @@ app.post('/api/changepw', function(req, res){
     form.on('end', function() {
         
         process.chdir('../');
-        console.log(process.cwd());
     });
  });
 
@@ -142,7 +185,6 @@ app.post('/api/changepw', function(req, res){
 
     form.on('end', function() {
         process.chdir('../../../');
-        console.log(process.cwd());
     });
  });
 
@@ -154,34 +196,31 @@ app.post('/api/changepw', function(req, res){
 
     if (fs.existsSync(fpath))
     {
-      var milestoneFolders = fs.readdirSync(fpath); //List of milestone folders
-      if(milestoneFolders[0] == '.DS_Store')   //Removes .DS_Store file
-      {
-        milestoneFolders.splice(0,1);  
-      }
-      for (var i = 0; i < milestoneFolders.length; i++)
-      {
-          
-        app.use('/' + milestoneFolders[i], express.static(fpath + '/' + milestoneFolders[i]));
-
-        console.log(milestoneFolders[i]);
-        var myFolder = {
-            folder: milestoneFolders[i],
-            files: []
-        }
-       
-        fs.readdir(fpath + '/' + milestoneFolders[i], (err, files) => {         
-            files.forEach(file => {
-                
-                myFolder.files.push(file);
-                
+       fs.readdir(fpath, function(err, filenames) {
+           for (var i = 0; i < filenames.length; i++){
+               if (filenames[i] === '.DS_Store'){
+                 filenames.splice(i, 1)
+               }
+           }
+            filenames.forEach(function(folder) {
+                app.use(express.static(fpath + '/' + folder));
+                fs.readdir(fpath + "/" + folder, function(err, files) {
+                    for (var i = 0; i < files.length; i++){
+                        if (files[i] === '.DS_Store'){
+                            files.splice(i, 1)
+                        }
+                    }
+                    var temp = {folder, files};
+                    //console.log(temp);
+                    final.push(temp);
+                });
             });
-            
-            console.log(myFolder);
-          }) 
+        });
+        setTimeout(function(){
+            res.send(final);
+        }, 50);
       }
-      //res.send(milestoneFolders);
-    }
+      
     else{
         console.log("no");
     }
