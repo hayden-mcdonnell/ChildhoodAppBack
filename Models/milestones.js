@@ -87,7 +87,6 @@ module.exports = {
       //Add note
       addNote: function(body){
         Milestones.findById(body.id, function (err, data) {
-          console.log(data);
           data.notes += body.note;
           data.save();
         }
@@ -95,7 +94,6 @@ module.exports = {
         //Edit note
         editNote: function(body){
           Milestones.findById(body.id, function (err, data) {
-            console.log(data);
             data.notes = body.note;
             data.save();
           }

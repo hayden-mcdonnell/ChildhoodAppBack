@@ -1,5 +1,7 @@
 var mongoose = require('mongoose');
-var fs = require('fs');
+var bcrypt = require('bcrypt');
+
+const saltRounds = 13;
 
 //Schema
 var userSchema = new mongoose.Schema({
@@ -35,42 +37,47 @@ var Users = module.exports = mongoose.model('Users', userSchema);
     .exec(function (err, user) {
         if (err) {
           return callback(err)
-        } else if (!user) {
+        } 
+        
+        else if (!user) {
           var err = new Error('User not found.');
           console.log(err);
           err.status = 401;
           return callback(err);
         }
-      
-        if (password === user.password) {
-          return callback(null, user);
-        } 
-        else {
-          var err = new Error('Password incorrect.');
+        
+        bcrypt.compare(password, user.password).then(function(res) {
+          if (res === true)
+          {
+            return callback(null, user);
+          }
+          else
+          {
+            var err = new Error('Password incorrect.');
           
-          err.status = 400;
-          return callback(err);
-        }
+            err.status = 400;
+            return callback(err);
+          }
+      }); 
     });
   },
 
   changePw: function (data, callback){
     Users.findOne({ email: data.email })
     .exec(function (err, user) {
-      if (user.password === data.current)
-      {
-        user.password = data.newpw;
-        user.save();
-      }
-      else{
-        var err = new Error('Passwords dont match.');
-        return callback(err);
-      }
+
+      bcrypt.compare(data.current, user.password, function(err, res) {
+        if (res === true){
+          bcrypt.hash(data.newpw, saltRounds, function(err, hash) {
+            user.password = hash;
+            user.save();
+          });
+        }
+        else{
+          var err = new Error('Passwords dont match.');
+          return callback(err);
+        }
+      });
     }
     )},
-
-    uploadUserImage: function(data, callback){
-
-      console.log("File path: " + data.uri);
-    }
 }
