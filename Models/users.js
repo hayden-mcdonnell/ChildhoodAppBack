@@ -21,9 +21,9 @@ var userSchema = new mongoose.Schema({
       type: String,
       required: true,
     },
-    img: {
-       data: Buffer, 
-       contentType: String 
+    recentMilestone: {
+      type: String,
+      required: false,
     }
   });
 
@@ -80,4 +80,21 @@ var Users = module.exports = mongoose.model('Users', userSchema);
       });
     }
     )},
+
+    recentMilestone: function(data, callback){
+      Users.findOne({ email: data.email })
+      .exec(function(err, user){
+        user.recentMilestone = data.milestoneName;
+        user.save();
+      })
+    },
+
+    getRecentMilestone: function(data, callback){
+      
+      Users.findOne({ email: data.email })
+      .exec(function(err, user){
+        return callback(user.recentMilestone)
+      })
+    }
+    
 }

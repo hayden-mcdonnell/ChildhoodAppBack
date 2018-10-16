@@ -6,6 +6,9 @@ var fs = require('fs');
 var mkdirp = require('mkdirp');
 var https = require('https');
 var http = require('http');
+var session = require('express-session');
+const uuid = require('uuid/v4')
+const MongoStore = require('connect-mongo')(session);
 
 var app = express();
 /* --------------------------------------------------- HTTPS STUFF ---------------------------------------------------
@@ -32,12 +35,33 @@ var Milestone = require('./Models/milestones');
 
 var httpServer = http.createServer(app);
 
-
-
 //Mongoose Connect
 
-mongoose.connect('mongodb://localhost:27017/ChildhoodAppDB', { useNewUrlParser: true });
+mongoose.connect('mongodb://appUser:rAnDoMsTrInG2233-@localhost:27017/ChildhoodAppDB?authSource=admin', { useNewUrlParser: true });
 var db = mongoose.connection;
+
+var sessionChecker = (req, res, next) => {
+    if (req.session.email) {
+        next();
+    } 
+    else {
+       console.log("Unauthenticated User tried to access a resource");
+    }    
+};
+
+app.use(session({
+    genid: function(req) {
+            return uuid() // use UUIDs for session IDs
+          },
+    store: new MongoStore({
+            dbPromise: db,
+        }),
+    secret: 'randomCode',
+    saveUninitialized: true,
+    resave: true,
+    maxAge:  1800000 
+    // set for https-> cookie: { secure: true }
+    }));
 
 app.get('/', function(req, res){
     res.send('Yes');
@@ -60,6 +84,15 @@ app.get('/api/complete', function(req, res){
 });
 
 app.post('/api/users', function(req, res){
+    req.session.regenerate(function(err){
+        if (err){
+           cb(err);
+        }
+        else{
+            req.session.email=req.body.email;
+        }
+     });
+
     try{
     if (req.body.email && req.body.passWord) {
         User.authenticate(req.body.email, req.body.passWord, function (error, user) {
@@ -84,7 +117,42 @@ app.post('/api/users', function(req, res){
     }
 });
 
-app.post('/api/milestones', function(req, res){
+app.post('/api/getRecentMilestone', function(req, res){
+    User.getRecentMilestone(req.body, function(milestone){
+        var payload = {
+            milestone: milestone
+        };
+        res.send(payload);
+    })
+})
+
+app.post('/api/reqPassword', function(req, res){
+    /*
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'childhoodappreadysetgo@gmail.com',
+          pass: 'davidMon1'
+        }
+      });
+
+      var mailOptions = {
+        from: 'childhoodappreadysetgo@gmail.com',
+        to: 'davidsmith1234323442@gmail.com',  //CHANGE EMAIL HERE
+        subject: 'New password request',
+        text: req.body.email + ' has requested a new password.'
+      };
+
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });*/
+});
+
+app.post('/api/milestones', sessionChecker, function(req, res){
     try{
     Milestone.getMilestones(req.body.email, function(error, milestone) {
         res.send(milestone);
@@ -95,7 +163,7 @@ app.post('/api/milestones', function(req, res){
     }
 });
 
-app.post('/api/addNote', function(req, res){
+app.post('/api/addNote', sessionChecker, function(req, res){
     try{
         Milestone.addNote(req.body);      
     }
@@ -104,7 +172,7 @@ app.post('/api/addNote', function(req, res){
     }
 });
 
-app.post('/api/editNote', function(req, res){
+app.post('/api/editNote', sessionChecker, function(req, res){
     try{
     Milestone.editNote(req.body);
     }
@@ -113,7 +181,7 @@ app.post('/api/editNote', function(req, res){
     }
 });
 
-app.post('/api/viewNote', function(req, res){
+app.post('/api/viewNote', sessionChecker, function(req, res){
     try{
 
     Milestone.viewNote(req.body, function(error, note){
@@ -129,11 +197,14 @@ app.post('/api/viewNote', function(req, res){
     }
 });
 
-app.post('/api/add', function(req, res){
+app.post('/api/add', sessionChecker, function(req, res){
     try{
+        console.log(req.body);
        Milestone.postMilestones(req.body);
+       User.recentMilestone(req.body);
        
-       var transporter = nodemailer.createTransport({
+       //Uncomment on release to initiate emails
+       /*var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: 'childhoodappreadysetgo@gmail.com',
@@ -143,7 +214,7 @@ app.post('/api/add', function(req, res){
 
       var mailOptions = {
         from: 'childhoodappreadysetgo@gmail.com',
-        to: 'childhoodapptestemail@gmail.com',
+        to: 'learning@uow.edu.au',  
         subject: 'Milestone achieved!!!',
         text: req.body.email + ' has achieved ' + req.body.milestoneName
       };
@@ -154,14 +225,14 @@ app.post('/api/add', function(req, res){
         } else {
           console.log('Email sent: ' + info.response);
         }
-      });
+      });*/
     }
     catch(err){
         console.log(err);
     }
 });
 
-app.post('/api/complete', function(req, res){
+app.post('/api/complete', sessionChecker, function(req, res){
    try{
     Milestone.completeMilestones(req.body, req.body[5]);
    }
@@ -170,7 +241,7 @@ app.post('/api/complete', function(req, res){
    }
 });
 
-app.post('/api/changepw', function(req, res){
+app.post('/api/changepw', sessionChecker, function(req, res){
    User.changePw(req.body, function (error){
        if(error)
        {
@@ -179,7 +250,7 @@ app.post('/api/changepw', function(req, res){
    });
  });
 
- app.post('/api/changeTime', function(req, res){
+ app.post('/api/changeTime', sessionChecker, function(req, res){
      try{
         Milestone.changeTime(req.body);
      }
@@ -188,7 +259,8 @@ app.post('/api/changepw', function(req, res){
      }
  });
 
- app.post('/api/profilePic', function(req, res){
+ app.post('/api/profilePic',sessionChecker, function(req, res){
+     
     try{
     var form = new formidable.IncomingForm();
     var user;
@@ -196,6 +268,7 @@ app.post('/api/changepw', function(req, res){
 
 
     form.on('field', function (name, file){
+        console.log(name, file);
         if (!fs.existsSync('./ProfilePics/' + file)){
             mkdirp('./ProfilePics/' + file);
         }
@@ -211,7 +284,7 @@ catch(err){
 }
  });
 
- app.post('/api/getProfilePic', function(req, res){
+ app.post('/api/getProfilePic', sessionChecker, function(req, res){
      try{
     var path = "./ProfilePics/" + req.body.User + "/profilePic.JPG";
     if (fs.existsSync(path))
@@ -227,7 +300,7 @@ catch(err){
     }
  })
 
- app.post('/api/milestonePic', function(req, res){
+ app.post('/api/milestonePic', sessionChecker, function(req, res){
     try {
     var form = new formidable.IncomingForm();
 
@@ -238,23 +311,20 @@ catch(err){
     form.parse(req, (err, fields, files) => {})
 
     form.on('field', function (name, file){
-        if(!receivedFirst){
+        if(name === "user"){
             if(!fs.existsSync('./MilestonePics/' + file)){
                 mkdirp('./MilestonePics/' + file);
             }
             email = file;
         }
 
-       else{
-            if(!fs.existsSync('./MilestonePics/' + email + '/' + file)){
-                mkdirp('./MilestonePics/' + email + '/' + file);
-            }
-            milestone = file;
+       if(name === "milestone"){
+        if(!fs.existsSync('./MilestonePics/' + email + '/' + file)){
+            mkdirp('./MilestonePics/' + email + '/' + file);
         }
-       receivedFirst = true;
+            milestone = file;
+       }
     })
-
-    
         form.on('fileBegin', function (name, file){
             file.path = './MilestonePics/' + email + '/' + milestone + '/' + file.name;
         });
@@ -265,7 +335,7 @@ catch(err){
     }
  });
 
- app.post('/api/getMilestonePics', function(req, res){
+ app.post('/api/getMilestonePics', sessionChecker, function(req, res){
         var fpath = "./MilestonePics/" + req.body.User;
         var final = [];
         var numOfFiles = 0;
@@ -273,6 +343,7 @@ catch(err){
         try{
             if (fs.existsSync(fpath))
             {
+               
             fs.readdir(fpath, function(err, filenames) {
                 for (var i = 0; i < filenames.length; i++){
                     if (filenames[i] === '.DS_Store'){
@@ -307,6 +378,7 @@ catch(err){
                 }, 50);
             }
             else{
+                console.log("Doesnt exist")
                 var payload = {
                     data: 'Empty',
                     length: 0
@@ -319,7 +391,7 @@ catch(err){
         }
  })
 
- app.post('/api/getaMilestonePic', function(req, res){
+ app.post('/api/getaMilestonePic', sessionChecker, function(req, res){
      try{
      var fpath = "./MilestonePics/" + req.body.User;
 
@@ -396,10 +468,10 @@ catch(err){
 }
  })
 
- app.post('/api/getMilestonePicsInd', function(req, res){
+ app.post('/api/getMilestonePicsInd', sessionChecker, function(req, res){
      try{
      if(req.body.Filename === 'noFile'){
-         res.sendFile("./noMilestonePic.png", {"root": __dirname});
+         res.sendFile("./Public/noMilestonePic.png", {"root": __dirname});
      }
      else{
         var path = "./MilestonePics/" + req.body.User + "/" + req.body.Milestone + "/" + req.body.Filename;
