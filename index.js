@@ -199,7 +199,6 @@ app.post('/api/viewNote', sessionChecker, function(req, res){
 
 app.post('/api/add', sessionChecker, function(req, res){
     try{
-        console.log(req.body);
        Milestone.postMilestones(req.body);
        User.recentMilestone(req.body);
        
