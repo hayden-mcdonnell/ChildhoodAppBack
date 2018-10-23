@@ -291,8 +291,7 @@ catch(err){
         res.sendFile(path, {"root": __dirname});
     }
     else{
-        
-        res.sendFile("./noPic.JPG", {"root": __dirname})
+        res.sendFile("./public/noPic.JPG", {"root": __dirname})
     }}
     catch(err){
         console.log(err);

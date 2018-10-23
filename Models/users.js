@@ -41,7 +41,6 @@ var Users = module.exports = mongoose.model('Users', userSchema);
         
         else if (!user) {
           var err = new Error('User not found.');
-          console.log(err);
           err.status = 401;
           return callback(err);
         }
