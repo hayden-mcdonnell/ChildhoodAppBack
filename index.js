@@ -12,11 +12,12 @@ const MongoStore = require('connect-mongo')(session);
 
 var app = express();
 /* --------------------------------------------------- HTTPS STUFF ---------------------------------------------------
+var credentials = {key: privateKey, cert: certificate};
+
 var app = express.createServer(credentials);
+
 var privateKey = fs.readFileSync(path_to_key);
 var certificate = fs.readFileSync(path_to_certificate');
-
-var credentials = {key: privateKey, cert: certificate};
 
 var httpsServer = https.createServer(credentials, app);
 Also uncomment second Last line
@@ -138,7 +139,7 @@ app.post('/api/reqPassword', function(req, res){
 
       var mailOptions = {
         from: 'childhoodappreadysetgo@gmail.com',
-        to: 'davidsmith1234323442@gmail.com',  //CHANGE EMAIL HERE
+        to: 'learning@uow.edu.au',  //CHANGE EMAIL HERE
         subject: 'New password request',
         text: req.body.email + ' has requested a new password.'
       };
